@@ -22,12 +22,10 @@
 ## 技术架构
 
 ### 后端技术栈
-- **框架**: FastAPI 0.104.1 (Python 3.10+)
-- **数据库**: MySQL 5.7 + Redis 6.x
-- **ORM**: SQLAlchemy 2.0 + Alembic
-- **认证**: JWT + Passlib
-- **任务队列**: Celery (定时提醒)
-- **部署**: Docker + Nginx
+- **框架**: Django 5.0 + Django REST Framework
+- **数据库**: MySQL 5.7+
+- **认证**: JWT (djangorestframework-simplejwt)
+- **部署**: Gunicorn + Nginx
 
 ### 前端技术栈
 - **框架**: Vue 3.x + TypeScript
@@ -42,13 +40,20 @@
 ### 环境要求
 - Python 3.10+
 - Node.js 18+
-- MySQL 5.7
-- Redis 6.x+
+- MySQL 5.7+
 
 ### 后端启动
+
 ```bash
 # 进入后端目录
 cd backend
+
+# 创建虚拟环境
+python -m venv venv
+
+# 激活虚拟环境
+source venv/bin/activate  # Linux/Mac
+# venv\Scripts\activate  # Windows
 
 # 安装依赖
 pip install -r requirements.txt
@@ -57,13 +62,18 @@ pip install -r requirements.txt
 cp .env.example .env
 # 编辑 .env 文件，配置数据库连接信息
 
-# 启动服务
-python app/main.py
-uvicorn app.main:app --reload --port 8000
+# 执行数据库迁移
+python manage.py migrate
+
+# 创建超级用户（可选）
+python manage.py createsuperuser
+
+# 启动开发服务器
+python manage.py runserver 0.0.0.0:8000
 ```
-后端服务启动后访问: http://localhost:8000/docs 查看API文档
 
 ### 前端启动
+
 ```bash
 # 进入前端目录
 cd frontend
@@ -74,29 +84,42 @@ npm install
 # 启动开发服务
 npm run dev
 ```
+
 前端服务启动后访问: http://localhost:5173
 
-### 默认测试账号
-- 用户名: `admin`
-- 密码: `123456`
+### 运行测试
+
+```bash
+cd backend
+
+# 运行所有测试
+python manage.py test
+
+# 运行特定应用的测试
+python manage.py test users.tests
+python manage.py test pets.tests
+python manage.py test vaccinations.tests
+python manage.py test health_records.tests
+python manage.py test expenses.tests
+```
 
 ## 项目结构
 
 ```
 pet-manager/
-├── backend/                 # 后端服务
-│   ├── app/
-│   │   ├── api/            # API接口层
-│   │   ├── core/           # 核心配置
-│   │   ├── crud/           # 数据操作层
-│   │   ├── db/             # 数据库相关
-│   │   ├── models/         # 数据模型
-│   │   ├── schemas/        # Pydantic模型
-│   │   └── main.py         # 项目入口
+├── backend/                 # 后端服务 (Django)
+│   ├── pet_manager/        # 项目配置
+│   ├── users/              # 用户模块
+│   ├── pets/               # 宠物管理模块
+│   ├── vaccinations/       # 疫苗管理模块
+│   ├── health_records/     # 健康记录模块
+│   ├── expenses/           # 消费管理模块
+│   ├── statistics/         # 统计数据模块
 │   ├── uploads/            # 文件上传目录
 │   ├── .env.example        # 环境变量示例
+│   ├── manage.py           # Django管理脚本
 │   └── requirements.txt    # 依赖列表
-├── frontend/               # 前端应用
+├── frontend/               # 前端应用 (Vue 3)
 │   ├── src/
 │   │   ├── api/            # API请求封装
 │   │   ├── components/     # 公共组件
@@ -106,66 +129,88 @@ pet-manager/
 │   │   └── utils/          # 工具函数
 │   └── package.json
 ├── plans/                  # 项目文档
-│   ├── 需求文档.md
-│   └── 技术方案.md
+│   └── 需求文档.md
 └── README.md               # 项目说明
 ```
 
 ## API接口
 
 ### 认证模块
-- `POST /api/auth/register` - 用户注册
-- `POST /api/auth/login` - 用户登录
-- `POST /api/auth/refresh-token` - 刷新令牌
+- `POST /api/auth/register/` - 用户注册
+- `POST /api/auth/login/` - 用户登录
+- `POST /api/auth/refresh/` - 刷新令牌
 
 ### 用户模块
-- `GET /api/user/profile` - 获取用户信息
-- `PUT /api/user/profile` - 更新用户信息
-- `PUT /api/user/password` - 修改密码
+- `GET /api/user/profile/` - 获取用户信息
+- `PUT /api/user/profile/` - 更新用户信息
+- `PUT /api/user/password/` - 修改密码
 
 ### 宠物管理
-- `GET /api/pets` - 获取宠物列表
-- `POST /api/pets` - 添加宠物
-- `GET /api/pets/{id}` - 获取宠物详情
-- `PUT /api/pets/{id}` - 更新宠物信息
-- `DELETE /api/pets/{id}` - 删除宠物
+- `GET /api/pets/` - 获取宠物列表
+- `POST /api/pets/` - 添加宠物
+- `GET /api/pets/{id}/` - 获取宠物详情
+- `PUT /api/pets/{id}/` - 更新宠物信息
+- `DELETE /api/pets/{id}/` - 删除宠物
 
 ### 疫苗管理
-- `GET /api/vaccinations/upcoming` - 即将到期的疫苗提醒
-- `GET /api/vaccinations/pets/{pet_id}` - 获取宠物疫苗记录
-- `POST /api/vaccinations/pets/{pet_id}` - 添加疫苗记录
+- `GET /api/vaccinations/` - 获取疫苗列表
+- `POST /api/vaccinations/` - 添加疫苗记录
+- `GET /api/vaccinations/{id}/` - 获取疫苗详情
+- `PUT /api/vaccinations/{id}/` - 更新疫苗记录
+- `DELETE /api/vaccinations/{id}/` - 删除疫苗记录
 
 ### 健康记录
-- `GET /api/health-records/pets/{pet_id}` - 获取健康记录
-- `POST /api/health-records/pets/{pet_id}` - 添加健康记录
-- `GET /api/health-records/pets/{pet_id}/weight-trend` - 体重变化趋势
+- `GET /api/health-records/` - 获取健康记录列表
+- `POST /api/health-records/` - 添加健康记录
+- `GET /api/health-records/{id}/` - 获取健康记录详情
+- `PUT /api/health-records/{id}/` - 更新健康记录
+- `DELETE /api/health-records/{id}/` - 删除健康记录
 
 ### 消费管理
-- `GET /api/expenses` - 获取所有消费记录
-- `GET /api/expenses/pets/{pet_id}` - 获取宠物消费记录
-- `POST /api/expenses/pets/{pet_id}` - 添加消费记录
-- `GET /api/expenses/statistics` - 消费统计数据
+- `GET /api/expenses/` - 获取消费记录列表
+- `POST /api/expenses/` - 添加消费记录
+- `GET /api/expenses/{id}/` - 获取消费记录详情
+- `PUT /api/expenses/{id}/` - 更新消费记录
+- `DELETE /api/expenses/{id}/` - 删除消费记录
 
 ### 统计分析
-- `GET /api/statistics/dashboard` - 仪表盘数据
-- `GET /api/statistics/overview` - 整体数据概览
-- `GET /api/statistics/pets/{pet_id}` - 宠物综合统计
+- `GET /api/statistics/dashboard/` - 仪表盘数据
+- `GET /api/statistics/upcoming-vaccinations/` - 即将到期疫苗
+- `GET /api/statistics/recent-health-records/` - 最近健康记录
+- `GET /api/statistics/expenses/` - 消费统计数据
+
+## 环境变量配置
+
+在 `backend/.env` 文件中配置以下内容：
+
+```env
+# Django配置
+SECRET_KEY=your-secret-key-here
+DEBUG=True
+TZ=Asia/Shanghai
+
+# 数据库配置
+DB_NAME=pet_manager
+DB_USER=root
+DB_PASSWORD=your-password
+DB_HOST=localhost
+DB_PORT=3306
+```
 
 ## 部署说明
 
 ### 开发环境
 1. 配置MySQL数据库，创建`pet_manager`数据库
-2. 配置Redis服务
-3. 启动后端服务
-4. 启动前端开发服务
+2. 启动后端服务
+3. 启动前端开发服务
 
 ### 生产环境
-推荐使用Docker Compose一键部署：
 ```bash
-docker-compose up -d
+# 使用Gunicorn部署
+cd backend
+pip install gunicorn
+gunicorn pet_manager.wsgi:application --bind 0.0.0.0:8000 --workers 4
 ```
-
-详细部署说明请参考 [部署文档](./docs/DEPLOY.md)
 
 ## 开发规范
 
@@ -173,28 +218,13 @@ docker-compose up -d
 - 遵循PEP8编码规范
 - 使用类型注解
 - 接口遵循RESTful设计规范
-- 数据库操作使用ORM，禁止直接拼接SQL
+- 数据库操作使用ORM
 
 ### 前端规范
 - 使用TypeScript类型注解
 - 遵循Vue 3 Composition API规范
 - 组件化开发，提高代码复用性
 - 响应式设计，支持PC和移动端
-
-## 功能规划
-
-### 二期功能
-- [ ] 数据导出功能（PDF/Excel）
-- [ ] PWA支持，离线访问
-- [ ] 邮件/短信提醒
-- [ ] 数据备份与恢复
-- [ ] 移动端适配优化
-
-### 三期功能
-- [ ] 社区交流功能
-- [ ] 宠物匹配功能
-- [ ] 第三方服务集成
-- [ ] 多用户数据共享
 
 ## 许可证
 MIT License

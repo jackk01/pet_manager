@@ -4,7 +4,8 @@ from django.db import models
 
 class User(AbstractUser):
     """自定义用户模型"""
-    
+
+    nickname = models.CharField(max_length=50, blank=True, verbose_name="昵称")
     phone = models.CharField(max_length=20, blank=True, verbose_name="手机号码")
     avatar = models.ImageField(upload_to='avatars/', blank=True, verbose_name="头像")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")
