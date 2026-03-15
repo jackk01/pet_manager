@@ -307,7 +307,7 @@ const petRules = {
 const fetchPetList = async () => {
   try {
     const res = await getPetList()
-    petList.value = res.data
+    petList.value = res as unknown as PetDto[]
   } catch (error) {
     ElMessage.error('获取宠物列表失败')
   }
@@ -371,7 +371,16 @@ const handleSubmitPet = async () => {
         petDialogVisible.value = false
         fetchPetList()
       } catch (error: any) {
-        ElMessage.error(error.response?.data?.detail || '操作失败')
+        const errorData = error.response?.data
+        if (errorData) {
+          // 处理 Django REST Framework 验证错误
+          const errorMessage = Object.entries(errorData)
+            .map(([key, value]) => `${key}: ${Array.isArray(value) ? value.join(', ') : value}`)
+            .join('; ')
+          ElMessage.error(errorMessage || '操作失败')
+        } else {
+          ElMessage.error('操作失败')
+        }
       } finally {
         submitLoading.value = false
       }
@@ -383,7 +392,7 @@ const handleSubmitPet = async () => {
 const viewPetDetail = async (pet: PetDto) => {
   try {
     const res = await getPetDetail(pet.id)
-    currentPet.value = res.data
+    currentPet.value = res as unknown as PetDto
     detailDialogVisible.value = true
   } catch (error) {
     ElMessage.error('获取宠物详情失败')
