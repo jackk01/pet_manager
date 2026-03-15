@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import type { UserInfo } from '@/types/user'
+import { getUserInfo as getUserInfoApi } from '@/api/user'
 
 export const useUserStore = defineStore('user', () => {
     const token = ref<string | null>(localStorage.getItem('token'))
@@ -23,6 +24,18 @@ export const useUserStore = defineStore('user', () => {
         localStorage.removeItem('userInfo')
     }
 
+    // 获取用户信息
+    const getUserInfo = async () => {
+        try {
+            const res = await getUserInfoApi()
+            setUserInfo(res as unknown as UserInfo)
+            return res
+        } catch (error) {
+            console.error('获取用户信息失败:', error)
+            throw error
+        }
+    }
+
     // 初始化时从localStorage读取用户信息
     const initUserInfo = () => {
         const userInfoStr = localStorage.getItem('userInfo')
@@ -43,6 +56,7 @@ export const useUserStore = defineStore('user', () => {
         userInfo,
         setToken,
         setUserInfo,
-        logout
+        logout,
+        getUserInfo
     }
 })

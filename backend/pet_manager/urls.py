@@ -11,7 +11,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     
     # API routes
-    path('api/auth/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('api/auth/refresh', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/', include('users.urls')),
     path('api/', include('pets.urls')),
     path('api/', include('vaccinations.urls')),
