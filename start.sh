@@ -2,7 +2,11 @@
 
 # ==================== 后端启动 ====================
 cd /Users/longyang/Desktop/code/demo/backend
+cd /data/code/pet_manager/backend
 
+python -m venv pet_env
+source pet_env/bin/activate
+deactivate
 
 # 1. 安装依赖
 pip install -r requirements.txt
