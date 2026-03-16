@@ -92,6 +92,7 @@ DATABASES = {
         'OPTIONS': {
             'charset': 'utf8mb4',
             'isolation_level': 'read committed',
+            'unix_socket': os.getenv('DB_SOCKET', '/tmp/mysql.sock'),
         },
     }
 }
