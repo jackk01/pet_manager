@@ -32,3 +32,6 @@ export interface UpdateExpenseDto {
     remark?: string
     attachment?: string
 }
+
+// 兼容旧版本的别名
+export type ExpenseType = ExpenseDto['category']

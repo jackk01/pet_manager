@@ -43,7 +43,7 @@
               <p class="stat-value">¥{{ stats.average_monthly || 0 }}</p>
             </div>
             <div class="stat-icon">
-              <el-icon size="40" color="#67c23a"><Calculator /></el-icon>
+              <el-icon size="40" color="#67c23a"><Coin /></el-icon>
             </div>
           </div>
         </el-card>
@@ -84,20 +84,18 @@
         
         <el-form-item label="消费类型">
           <el-select
-            v-model="filterForm.expense_type"
+            v-model="filterForm.category"
             placeholder="全部类型"
             clearable
             style="width: 180px"
             @change="fetchExpenseList"
           >
-            <el-option label="食品" value="食品" />
-            <el-option label="医疗" value="医疗" />
-            <el-option label="美容" value="美容" />
-            <el-option label="疫苗" value="疫苗" />
-            <el-option label="玩具" value="玩具" />
-            <el-option label="用品" value="用品" />
-            <el-option label="寄养" value="寄养" />
-            <el-option label="其他" value="其他" />
+            <el-option label="食品" value="food" />
+            <el-option label="医疗" value="medical" />
+            <el-option label="美容" value="grooming" />
+            <el-option label="用品" value="supplies" />
+            <el-option label="保险" value="insurance" />
+            <el-option label="其他" value="other" />
           </el-select>
         </el-form-item>
         
@@ -133,10 +131,10 @@
           </template>
         </el-table-column>
         
-        <el-table-column prop="expense_type" label="消费类型" width="100">
+        <el-table-column prop="category" label="消费类型" width="100">
           <template #default="scope">
-            <el-tag size="small" :type="getExpenseTypeTag(scope.row.expense_type)">
-              {{ scope.row.expense_type }}
+            <el-tag size="small" :type="getExpenseTypeTag(scope.row.category)">
+              {{ getCategoryText(scope.row.category) }}
             </el-tag>
           </template>
         </el-table-column>
@@ -153,13 +151,8 @@
           </template>
         </el-table-column>
         
-        <el-table-column prop="description" label="消费描述" min-width="200" />
+        <el-table-column prop="remark" label="备注" min-width="200" />
         <el-table-column prop="merchant" label="商家" width="150" />
-        <el-table-column prop="payment_method" label="支付方式" width="100">
-          <template #default="scope">
-            {{ getPaymentMethodText(scope.row.payment_method) }}
-          </template>
-        </el-table-column>
         
         <el-table-column label="操作" width="150" fixed="right">
           <template #default="scope">
@@ -284,7 +277,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, type FormInstance } from 'element-plus'
-import { Plus, Money, TrendCharts, Calculator, Coin } from '@element-plus/icons-vue'
+import { Plus, Money, TrendCharts, Coin } from '@element-plus/icons-vue'
 import { getExpenseList, createExpense, updateExpense, deleteExpense, getExpenseStats } from '@/api/expense'
 import { getPetList } from '@/api/pet'
 import { formatDate } from '@/utils/date'
@@ -311,7 +304,7 @@ const currentExpense = ref<ExpenseDto | null>(null)
 
 const filterForm = reactive({
   pet_id: undefined as number | undefined,
-  expense_type: undefined as string | undefined,
+  category: undefined as string | undefined,
   date_range: [] as string[] | undefined
 })
 
@@ -323,20 +316,18 @@ const pagination = reactive({
 
 const expenseForm = reactive<CreateExpenseDto | UpdateExpenseDto>({
   pet_id: undefined as number | undefined,
-  expense_type: '',
+  category: '',
   amount: 0,
   expense_date: '',
-  description: '',
   merchant: '',
-  payment_method: '',
-  notes: ''
+  remark: ''
 })
 
 const expenseRules = {
   pet_id: [
     { required: true, message: '请选择宠物', trigger: 'change' }
   ],
-  expense_type: [
+  category: [
     { required: true, message: '请选择消费类型', trigger: 'change' }
   ],
   amount: [
@@ -376,7 +367,7 @@ const fetchExpenseList = async () => {
       page: pagination.page,
       size: pagination.size,
       pet_id: filterForm.pet_id,
-      expense_type: filterForm.expense_type
+      category: filterForm.category
     }
     
     if (filterForm.date_range && filterForm.date_range.length === 2) {
@@ -400,13 +391,11 @@ const openCreateDialog = () => {
   expenseDialogVisible.value = true
   Object.assign(expenseForm, {
     pet_id: filterForm.pet_id,
-    expense_type: '',
+    category: '',
     amount: 0,
     expense_date: '',
-    description: '',
     merchant: '',
-    payment_method: '',
-    notes: ''
+    remark: ''
   })
   if (expenseFormRef.value) {
     expenseFormRef.value.resetFields()
@@ -420,13 +409,11 @@ const openEditDialog = (expense: ExpenseDto) => {
   expenseDialogVisible.value = true
   Object.assign(expenseForm, {
     pet_id: expense.pet_id,
-    expense_type: expense.expense_type,
+    category: expense.category,
     amount: expense.amount,
     expense_date: expense.expense_date,
-    description: expense.description,
     merchant: expense.merchant,
-    payment_method: expense.payment_method,
-    notes: expense.notes
+    remark: expense.remark
   })
 }
 
@@ -483,26 +470,25 @@ const confirmDelete = async () => {
 
 // 获取消费类型标签颜色
 const getExpenseTypeTag = (type: string) => {
-  if (type === '食品') return 'primary'
-  if (type === '医疗') return 'danger'
-  if (type === '美容') return 'warning'
-  if (type === '疫苗') return 'success'
-  if (type === '玩具') return 'info'
-  if (type === '用品') return 'primary'
-  if (type === '寄养') return 'success'
+  if (type === 'food') return 'primary'
+  if (type === 'medical') return 'danger'
+  if (type === 'grooming') return 'warning'
+  if (type === 'supplies') return 'info'
+  if (type === 'insurance') return 'success'
   return 'info'
 }
 
-// 获取支付方式文本
-const getPaymentMethodText = (method?: string) => {
-  const methods: Record<string, string> = {
-    wechat: '微信',
-    alipay: '支付宝',
-    cash: '现金',
-    card: '银行卡',
+// 获取消费类型中文名称
+const getCategoryText = (category: string) => {
+  const categoryMap: Record<string, string> = {
+    food: '食品',
+    medical: '医疗',
+    grooming: '美容',
+    supplies: '用品',
+    insurance: '保险',
     other: '其他'
   }
-  return method ? methods[method] || '其他' : '其他'
+  return categoryMap[category] || category
 }
 
 onMounted(() => {

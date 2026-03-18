@@ -81,12 +81,18 @@
 
     <el-row :gutter="20" class="charts-row">
       <el-col :span="12">
-        <el-card title="月度消费趋势" class="chart-card">
+        <el-card class="chart-card">
+          <template #header>
+            <span>月度消费趋势</span>
+          </template>
           <div ref="monthlyTrendRef" class="chart-container"></div>
         </el-card>
       </el-col>
       <el-col :span="12">
-        <el-card title="消费类型分布" class="chart-card">
+        <el-card class="chart-card">
+          <template #header>
+            <span>消费类型分布</span>
+          </template>
           <div ref="expenseTypeRef" class="chart-container"></div>
         </el-card>
       </el-col>
@@ -94,12 +100,18 @@
 
     <el-row :gutter="20" class="charts-row">
       <el-col :span="12">
-        <el-card title="宠物消费占比" class="chart-card">
+        <el-card class="chart-card">
+          <template #header>
+            <span>宠物消费占比</span>
+          </template>
           <div ref="petExpenseRef" class="chart-container"></div>
         </el-card>
       </el-col>
       <el-col :span="12">
-        <el-card title="健康记录类型分布" class="chart-card">
+        <el-card class="chart-card">
+          <template #header>
+            <span>健康记录类型分布</span>
+          </template>
           <div ref="healthTypeRef" class="chart-container"></div>
         </el-card>
       </el-col>
@@ -107,7 +119,10 @@
 
     <el-row :gutter="20" class="charts-row">
       <el-col :span="24">
-        <el-card title="年度消费明细" class="chart-card">
+        <el-card class="chart-card">
+          <template #header>
+            <span>年度消费明细</span>
+          </template>
           <div ref="yearlyDetailRef" class="chart-container bar-chart"></div>
         </el-card>
       </el-col>

@@ -1,12 +1,12 @@
 #!/bin/bash
 
 # ==================== 后端启动 ====================
-cd /Users/longyang/Desktop/code/demo/backend
+cd /Users/longyang/Desktop/code/pet_manager/backend
 cd /data/code/pet_manager/backend
 
 python -m venv pet_env
 source pet_env/bin/activate
-deactivate
+# deactivate
 
 # 1. 安装依赖
 pip install -r requirements.txt
@@ -25,7 +25,7 @@ python manage.py runserver 0.0.0.0:8000
 
 # ==================== 前端启动 ====================
 # 打开新终端窗口
-cd /Users/longyang/Desktop/code/demo/frontend
+cd /Users/longyang/Desktop/code/pet_manager/frontend
 npm install
 # 或
 # pnpm install
@@ -33,7 +33,7 @@ npm run dev
 
 # ==================== 单元测试 ====================
 # 运行所有测试
-cd /Users/longyang/Desktop/code/demo/backend
+cd /Users/longyang/Desktop/code/pet_manager/backend
 python manage.py test
 
 # 运行特定应用的测试
