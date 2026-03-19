@@ -1,3 +1,6 @@
+import base64
+import uuid
+from django.core.files.base import ContentFile
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
@@ -7,11 +10,36 @@ User = get_user_model()
 
 class UserSerializer(serializers.ModelSerializer):
     """用户序列化器"""
-    
+
+    class Base64ImageField(serializers.ImageField):
+        def to_internal_value(self, data):
+            if data in (None, '', 'null', 'undefined'):
+                return None
+
+            if isinstance(data, str) and data.startswith('data:image'):
+                format_part, image_data = data.split(';base64,')
+                ext = format_part.split('/')[-1]
+                filename = f"{uuid.uuid4().hex}.{ext}"
+                data = ContentFile(base64.b64decode(image_data), name=filename)
+            elif isinstance(data, str):
+                return None
+
+            return super().to_internal_value(data)
+
+    avatar = Base64ImageField(required=False, allow_null=True)
+
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'nickname', 'avatar', 'phone', 'is_active', 'created_at', 'updated_at']
-        read_only_fields = ['id', 'created_at', 'updated_at']
+        fields = [
+            'id', 'username', 'email', 'nickname', 'avatar', 'phone',
+            'is_active', 'last_login', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at', 'last_login']
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['avatar'] = instance.avatar.url if instance.avatar else None
+        return data
 
 
 class UserCreateSerializer(serializers.ModelSerializer):

@@ -5,6 +5,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.db.models import Count, Sum
+from django.db.models.functions import ExtractMonth
 
 from pets.models import Pet
 from vaccinations.models import Vaccination
@@ -225,8 +226,8 @@ def expense_statistics(request):
     monthly_trend_data = Expense.objects.filter(
         pet_id__in=pet_ids,
         expense_date__gte=year_start
-    ).extra(
-        select={'month': "strftime('%%m', expense_date)"}
+    ).annotate(
+        month=ExtractMonth('expense_date')
     ).values('month').annotate(
         total=Sum('amount')
     ).order_by('month')

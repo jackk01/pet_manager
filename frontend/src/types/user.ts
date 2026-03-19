@@ -6,6 +6,7 @@ export interface UserInfo {
     avatar?: string
     phone?: string
     is_active: boolean
+    last_login?: string
     created_at: string
     updated_at: string
 }
@@ -38,6 +39,7 @@ export interface UpdateUserProfileDto {
     birth_date?: string
     gender?: 'male' | 'female' | 'unknown'
     address?: string
+    avatar?: string
 }
 
 export interface ChangePasswordDto {

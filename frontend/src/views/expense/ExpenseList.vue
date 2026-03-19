@@ -339,13 +339,56 @@ const expenseRules = {
   ]
 }
 
+const parseListPayload = <T>(payload: any): { items: T[]; total: number } => {
+  if (Array.isArray(payload)) {
+    return { items: payload, total: payload.length }
+  }
+  if (Array.isArray(payload?.results)) {
+    return { items: payload.results, total: payload.count ?? payload.results.length }
+  }
+  if (Array.isArray(payload?.items)) {
+    return { items: payload.items, total: payload.total ?? payload.items.length }
+  }
+  if (Array.isArray(payload?.data?.items)) {
+    return { items: payload.data.items, total: payload.data.total ?? payload.data.items.length }
+  }
+  if (Array.isArray(payload?.data)) {
+    return { items: payload.data, total: payload.data.length }
+  }
+  return { items: [], total: 0 }
+}
+
+const showFriendlyError = (error: any, fallback: string) => {
+  const status = error?.response?.status
+  const messageByStatus: Record<number, string> = {
+    401: '登录状态已过期，请重新登录后再试',
+    403: '当前账号暂无权限访问这部分数据',
+    404: '请求的服务暂时不可用，请稍后刷新重试',
+    500: '服务器开小差了，请稍后再试'
+  }
+  const backendError = error?.response?.data
+  const backendMessage = backendError
+    ? Object.entries(backendError)
+        .map(([key, value]) => `${key}: ${Array.isArray(value) ? value.join(', ') : value}`)
+        .join('; ')
+    : ''
+  const message = messageByStatus[status] || backendMessage || fallback
+  ElMessage({
+    type: 'error',
+    showClose: true,
+    duration: 3600,
+    message
+  })
+}
+
 // 获取宠物列表
 const fetchPetList = async () => {
   try {
     const res = await getPetList()
-    petList.value = res.data
-  } catch (error) {
-    ElMessage.error('获取宠物列表失败')
+    const parsed = parseListPayload<PetDto>(res as any)
+    petList.value = parsed.items
+  } catch (error: any) {
+    showFriendlyError(error, '宠物列表加载失败，请稍后重试')
   }
 }
 
@@ -353,9 +396,10 @@ const fetchPetList = async () => {
 const fetchStats = async () => {
   try {
     const res = await getExpenseStats()
-    stats.value = res.data
-  } catch (error) {
+    stats.value = (res || stats.value) as any
+  } catch (error: any) {
     console.error('获取统计数据失败:', error)
+    showFriendlyError(error, '统计数据加载失败，不影响您继续录入消费记录')
   }
 }
 
@@ -376,10 +420,14 @@ const fetchExpenseList = async () => {
     }
     
     const res = await getExpenseList(params)
-    expenseList.value = res.data.items
-    pagination.total = res.data.total
-  } catch (error) {
-    ElMessage.error('获取消费记录失败')
+    const parsed = parseListPayload<any>(res as any)
+    expenseList.value = parsed.items.map((item) => ({
+      ...item,
+      pet_id: item.pet_id ?? item.pet
+    }))
+    pagination.total = parsed.total
+  } catch (error: any) {
+    showFriendlyError(error, '消费记录加载失败，请稍后重试')
   } finally {
     loading.value = false
   }
@@ -425,18 +473,26 @@ const handleSubmitExpense = async () => {
     if (valid) {
       submitLoading.value = true
       try {
+        const payload: any = {
+          pet: (expenseForm as any).pet_id,
+          category: (expenseForm as any).category,
+          amount: (expenseForm as any).amount,
+          expense_date: (expenseForm as any).expense_date,
+          merchant: (expenseForm as any).merchant || '',
+          remark: (expenseForm as any).remark || ''
+        }
         if (isEdit.value && currentExpense.value) {
-          await updateExpense(currentExpense.value.id, expenseForm as UpdateExpenseDto)
+          await updateExpense(currentExpense.value.id, payload as UpdateExpenseDto)
           ElMessage.success('修改成功')
         } else {
-          await createExpense(expenseForm as CreateExpenseDto)
+          await createExpense(payload as CreateExpenseDto)
           ElMessage.success('添加成功')
         }
         expenseDialogVisible.value = false
-        fetchExpenseList()
-        fetchStats()
+        await fetchExpenseList()
+        await fetchStats()
       } catch (error: any) {
-        ElMessage.error(error.response?.data?.detail || '操作失败')
+        showFriendlyError(error, '保存失败，请检查填写信息后重试')
       } finally {
         submitLoading.value = false
       }
@@ -459,10 +515,10 @@ const confirmDelete = async () => {
     await deleteExpense(currentExpense.value.id)
     ElMessage.success('删除成功')
     deleteDialogVisible.value = false
-    fetchExpenseList()
-    fetchStats()
-  } catch (error) {
-    ElMessage.error('删除失败')
+    await fetchExpenseList()
+    await fetchStats()
+  } catch (error: any) {
+    showFriendlyError(error, '删除失败，请稍后重试')
   } finally {
     deleteLoading.value = false
   }
@@ -491,9 +547,9 @@ const getCategoryText = (category: string) => {
   return categoryMap[category] || category
 }
 
-onMounted(() => {
-  fetchPetList()
-  fetchExpenseList()
-  fetchStats()
+onMounted(async () => {
+  await fetchPetList()
+  await fetchExpenseList()
+  await fetchStats()
 })
 </script>

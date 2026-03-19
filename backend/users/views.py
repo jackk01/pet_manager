@@ -7,6 +7,7 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate, get_user_model
 from django.db import IntegrityError
+from django.utils import timezone
 
 from pets.models import Pet
 from vaccinations.models import Vaccination
@@ -85,6 +86,8 @@ class LoginView(APIView):
                 )
             
             refresh = RefreshToken.for_user(user)
+            user.last_login = timezone.now()
+            user.save(update_fields=['last_login'])
             
             return Response({
                 'access_token': str(refresh.access_token),

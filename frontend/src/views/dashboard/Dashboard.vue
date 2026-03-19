@@ -107,7 +107,7 @@
               <div class="reminder-item">
                 <span class="pet-name">{{ item.pet_name }}</span>
                 <span class="vaccine-name">需要接种 {{ item.vaccine_name }}</span>
-                <span class="due-date">到期时间: {{ formatDate(item.due_date) }}</span>
+                <span class="due-date">到期时间: {{ formatDate(item.next_due_date) }}</span>
               </div>
             </el-timeline-item>
           </el-timeline>
@@ -169,16 +169,10 @@ const fetchDashboardData = async () => {
       getRecentHealthRecords(5) // 获取最近5条健康记录
     ])
 
-    // 确保数据存在后再赋值
-    if (statsRes?.data) {
-      dashboardStats.value = statsRes.data
-    }
-    if (vaccinesRes?.data) {
-      upcomingVaccinations.value = vaccinesRes.data
-    }
-    if (healthRes?.data) {
-      recentHealthRecords.value = healthRes.data
-    }
+    // request 拦截器已直接返回 response.data
+    dashboardStats.value = (statsRes || {}) as any
+    upcomingVaccinations.value = (vaccinesRes || []) as any[]
+    recentHealthRecords.value = (healthRes || []) as any[]
 
     // 只有在有数据时才初始化图表
     if (dashboardStats.value && Object.keys(dashboardStats.value).length > 0) {

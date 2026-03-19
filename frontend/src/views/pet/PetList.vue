@@ -10,13 +10,16 @@
 
     <el-card class="pet-card-container">
       <el-row :gutter="20">
-        <el-col :span="8" v-for="pet in petList" :key="pet.id">
+        <el-col :xs="24" :sm="12" :lg="8" v-for="pet in petList" :key="pet.id">
           <el-card class="pet-card" shadow="hover">
             <template #header>
               <div class="card-header">
-                <span>{{ pet.name }}</span>
+                <div class="card-title">
+                  <p class="name">{{ pet.name }}</p>
+                  <p class="subtitle">{{ pet.breed || '未填写品种' }}</p>
+                </div>
                 <el-dropdown @command="(command) => handleAction(command, pet)">
-                  <el-button type="text" icon="MoreFilled" />
+                  <el-button class="action-trigger" type="text" icon="MoreFilled" />
                   <template #dropdown>
                     <el-dropdown-menu>
                       <el-dropdown-item command="edit">编辑</el-dropdown-item>
@@ -26,50 +29,57 @@
                 </el-dropdown>
               </div>
             </template>
-            
-            <div class="pet-avatar">
-              <el-avatar :size="80" :src="pet.avatar || defaultAvatar">
-                {{ pet.name.charAt(0) }}
-              </el-avatar>
+
+            <div class="pet-profile">
+              <div class="pet-avatar">
+                <el-avatar :size="92" :src="pet.avatar || defaultAvatar">
+                  {{ pet.name.charAt(0) }}
+                </el-avatar>
+              </div>
+              <div class="pet-meta">
+                <el-tag effect="light" size="small" round>
+                  {{ pet.gender === '公' ? '公' : pet.gender === '母' ? '母' : '未知性别' }}
+                </el-tag>
+                <el-tag type="success" effect="light" size="small" round>
+                  {{ calculateAge(pet.birth_date) }}
+                </el-tag>
+                <el-tag v-if="pet.weight" type="warning" effect="light" size="small" round>
+                  {{ pet.weight }}kg
+                </el-tag>
+              </div>
             </div>
-            
-            <div class="pet-info">
-              <div class="info-row">
+
+            <div class="pet-info-grid">
+              <div class="info-item">
                 <span class="label">品种：</span>
                 <span class="value">{{ pet.breed || '未知' }}</span>
               </div>
-              <div class="info-row">
+              <div class="info-item">
                 <span class="label">毛色：</span>
                 <span class="value">{{ pet.color || '未知' }}</span>
               </div>
-              <div class="info-row">
-                <span class="label">性别：</span>
-                <span class="value">
-                  {{ pet.gender === '公' ? '公' : pet.gender === '母' ? '母' : '未知' }}
-                </span>
-              </div>
-              <div class="info-row">
+              <div class="info-item">
                 <span class="label">生日：</span>
                 <span class="value">{{ pet.birth_date ? formatDate(pet.birth_date) : '未知' }}</span>
               </div>
-              <div class="info-row">
-                <span class="label">年龄：</span>
-                <span class="value">{{ calculateAge(pet.birth_date) }}</span>
+              <div class="info-item">
+                <span class="label">芯片号：</span>
+                <span class="value">{{ pet.chip_number || '未登记' }}</span>
               </div>
             </div>
 
             <div class="pet-actions">
-              <el-button type="primary" size="small" @click="viewPetDetail(pet)">
+              <el-button type="primary" class="action-btn" @click="viewPetDetail(pet)">
                 查看详情
               </el-button>
-              <el-button size="small" @click="goToVaccine(pet)">
+              <el-button class="action-btn" @click="goToVaccine(pet)">
                 疫苗记录
               </el-button>
             </div>
           </el-card>
         </el-col>
-        
-        <el-col :span="8" v-if="petList.length === 0">
+
+        <el-col :xs="24" :sm="12" :lg="8" v-if="petList.length === 0">
           <div class="empty-pet">
             <el-empty description="暂无宠物档案，点击上方按钮添加您的爱宠吧" />
           </div>
@@ -93,11 +103,11 @@
         <el-form-item label="宠物名称" prop="name">
           <el-input v-model="petForm.name" placeholder="请输入宠物名称" />
         </el-form-item>
-        
+
         <el-form-item label="品种" prop="breed">
           <el-input v-model="petForm.breed" placeholder="请输入品种" />
         </el-form-item>
-        
+
         <el-form-item label="性别" prop="gender">
           <el-select v-model="petForm.gender" placeholder="请选择性别">
             <el-option label="公" value="公" />
@@ -105,23 +115,23 @@
             <el-option label="未知" value="未知" />
           </el-select>
         </el-form-item>
-        
+
         <el-form-item label="体重(kg)" prop="weight">
           <el-input-number v-model="petForm.weight" :min="0" :precision="2" :step="0.1" placeholder="请输入体重" />
         </el-form-item>
-        
+
         <el-form-item label="毛色" prop="color">
           <el-input v-model="petForm.color" placeholder="请输入毛色" />
         </el-form-item>
-        
+
         <el-form-item label="芯片号" prop="chip_number">
           <el-input v-model="petForm.chip_number" placeholder="请输入芯片号" />
         </el-form-item>
-        
+
         <el-form-item label="性格特点" prop="personality">
           <el-input v-model="petForm.personality" type="textarea" :rows="2" placeholder="请输入性格特点" />
         </el-form-item>
-        
+
         <el-form-item label="生日" prop="birth_date">
           <el-date-picker
             v-model="petForm.birth_date"
@@ -132,7 +142,7 @@
             style="width: 100%"
           />
         </el-form-item>
-        
+
         <el-form-item label="头像">
           <el-upload
             class="avatar-uploader"
@@ -145,7 +155,7 @@
             <el-icon v-else class="avatar-uploader-icon"><Plus /></el-icon>
           </el-upload>
         </el-form-item>
-        
+
         <el-form-item label="特征描述">
           <el-input
             v-model="petForm.description"
@@ -155,7 +165,7 @@
           />
         </el-form-item>
       </el-form>
-      
+
       <template #footer>
         <el-button @click="petDialogVisible = false">取消</el-button>
         <el-button type="primary" :loading="submitLoading" @click="handleSubmitPet">
@@ -184,9 +194,9 @@
             </div>
           </div>
         </div>
-        
+
         <el-divider />
-        
+
         <el-descriptions :column="2" border>
           <el-descriptions-item label="性别">
             {{ currentPet.gender || '未知' }}
@@ -213,7 +223,7 @@
             {{ currentPet.personality || '暂无记录' }}
           </el-descriptions-item>
         </el-descriptions>
-        
+
         <div class="detail-stats">
           <el-row :gutter="20">
             <el-col :span="8">
@@ -237,7 +247,7 @@
           </el-row>
         </div>
       </div>
-      
+
       <template #footer>
         <el-button @click="detailDialogVisible = false">关闭</el-button>
         <el-button type="primary" @click="editFromDetail">编辑信息</el-button>
@@ -264,8 +274,8 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage, ElMessageBox, type FormInstance, type UploadProps } from 'element-plus'
-import { Plus, MoreFilled } from '@element-plus/icons-vue'
+import { ElMessage, type FormInstance, type UploadProps } from 'element-plus'
+import { Plus } from '@element-plus/icons-vue'
 import { getPetList, createPet, updatePet, deletePet, getPetDetail } from '@/api/pet'
 import { formatDate } from '@/utils/date'
 import type { PetDto, CreatePetDto, UpdatePetDto } from '@/types/pet'
@@ -303,14 +313,49 @@ const petRules = {
   ]
 }
 
+const showFriendlyError = (error: any, fallback: string) => {
+  const status = error?.response?.status
+  const messageByStatus: Record<number, string> = {
+    401: '登录状态已过期，请重新登录后再试',
+    403: '当前账号暂无权限访问这部分数据',
+    404: '请求的服务暂时不可用，请稍后刷新重试',
+    500: '服务器开小差了，请稍后再试'
+  }
+  const backendError = error?.response?.data
+  const backendMessage = backendError
+    ? Object.entries(backendError)
+        .map(([key, value]) => `${key}: ${Array.isArray(value) ? value.join(', ') : value}`)
+        .join('; ')
+    : ''
+  const message = messageByStatus[status] || backendMessage || fallback
+  ElMessage({
+    type: 'error',
+    showClose: true,
+    duration: 3600,
+    message
+  })
+}
+
 // 获取宠物列表
 const fetchPetList = async () => {
   try {
     const res = await getPetList()
-    // 处理后端分页返回格式 {count, next, previous, results}
-    petList.value = (res.results || res) as unknown as PetDto[]
-  } catch (error) {
-    ElMessage.error('获取宠物列表失败')
+    const payload = res as any
+    if (Array.isArray(payload)) {
+      petList.value = payload
+      return
+    }
+    if (Array.isArray(payload?.results)) {
+      petList.value = payload.results
+      return
+    }
+    if (Array.isArray(payload?.data)) {
+      petList.value = payload.data
+      return
+    }
+    petList.value = []
+  } catch (error: any) {
+    showFriendlyError(error, '宠物列表加载失败，请稍后重试')
   }
 }
 
@@ -357,31 +402,40 @@ const openEditDialog = (pet: PetDto) => {
 // 提交宠物信息
 const handleSubmitPet = async () => {
   if (!petFormRef.value) return
-  
+
   await petFormRef.value.validate(async (valid) => {
     if (valid) {
       submitLoading.value = true
       try {
+        const payload: any = {
+          name: (petForm as any).name,
+          breed: (petForm as any).breed,
+          gender: (petForm as any).gender,
+          birth_date: (petForm as any).birth_date,
+          weight: (petForm as any).weight,
+          color: (petForm as any).color,
+          chip_number: (petForm as any).chip_number,
+          description: (petForm as any).description,
+          personality: (petForm as any).personality
+        }
+        const avatarValue = (petForm as any).avatar as string | undefined
+        if (avatarValue && avatarValue.startsWith('data:image')) {
+          payload.avatar = avatarValue
+        } else if (!isEdit.value && avatarValue === '') {
+          payload.avatar = ''
+        }
+
         if (isEdit.value && currentPet.value) {
-          await updatePet(currentPet.value.id, petForm as UpdatePetDto)
+          await updatePet(currentPet.value.id, payload as UpdatePetDto)
           ElMessage.success('修改成功')
         } else {
-          await createPet(petForm as CreatePetDto)
+          await createPet(payload as CreatePetDto)
           ElMessage.success('添加成功')
         }
+        await fetchPetList()
         petDialogVisible.value = false
-        fetchPetList()
       } catch (error: any) {
-        const errorData = error.response?.data
-        if (errorData) {
-          // 处理 Django REST Framework 验证错误
-          const errorMessage = Object.entries(errorData)
-            .map(([key, value]) => `${key}: ${Array.isArray(value) ? value.join(', ') : value}`)
-            .join('; ')
-          ElMessage.error(errorMessage || '操作失败')
-        } else {
-          ElMessage.error('操作失败')
-        }
+        showFriendlyError(error, '保存失败，请检查填写信息后重试')
       } finally {
         submitLoading.value = false
       }
@@ -395,8 +449,8 @@ const viewPetDetail = async (pet: PetDto) => {
     const res = await getPetDetail(pet.id)
     currentPet.value = res as unknown as PetDto
     detailDialogVisible.value = true
-  } catch (error) {
-    ElMessage.error('获取宠物详情失败')
+  } catch (error: any) {
+    showFriendlyError(error, '宠物详情加载失败，请稍后重试')
   }
 }
 
@@ -410,7 +464,7 @@ const editFromDetail = () => {
 
 // 跳转疫苗记录
 const goToVaccine = (pet: PetDto) => {
-  router.push({ path: '/vaccination', query: { pet_id: pet.id } })
+  router.push({ path: '/vaccinations', query: { pet_id: pet.id } })
 }
 
 // 操作菜单
@@ -426,15 +480,15 @@ const handleAction = (command: string, pet: PetDto) => {
 // 确认删除
 const confirmDelete = async () => {
   if (!currentPet.value) return
-  
+
   deleteLoading.value = true
   try {
     await deletePet(currentPet.value.id)
     ElMessage.success('删除成功')
     deleteDialogVisible.value = false
-    fetchPetList()
-  } catch (error) {
-    ElMessage.error('删除失败')
+    await fetchPetList()
+  } catch (error: any) {
+    showFriendlyError(error, '删除失败，请稍后重试')
   } finally {
     deleteLoading.value = false
   }
@@ -446,15 +500,15 @@ const beforeAvatarUpload: UploadProps['beforeUpload'] = (rawFile) => {
     ElMessage.error('请上传图片文件')
     return false
   }
-  const isLt2M = rawFile.size / 1024 / 1024 < 2
-  if (!isLt2M) {
-    ElMessage.error('图片大小不能超过 2MB')
+  const isLt10M = rawFile.size / 1024 / 1024 < 10
+  if (!isLt10M) {
+    ElMessage.error('图片大小不能超过 10MB')
     return false
   }
   return true
 }
 
-// 处理头像上传（这里模拟上传，实际项目中需要上传到服务器）
+// 处理头像上传（转成 base64 交给后端）
 const handleAvatarUpload = (options: any) => {
   const reader = new FileReader()
   reader.onload = (e) => {
@@ -475,4 +529,268 @@ const calculateAge = (birthDate?: string) => {
   }
   return `${age}岁`
 }
+
+onMounted(() => {
+  fetchPetList()
+})
 </script>
+
+<style scoped>
+.pet-list-container {
+  width: 100%;
+  --pet-peach: #ffe8dc;
+  --pet-cream: #fff8ef;
+  --pet-mint: #e6f8ef;
+  --pet-blue: #e9f2ff;
+  --pet-text-main: #5b3a29;
+  --pet-text-sub: #a17358;
+}
+
+.pet-card-container {
+  min-height: 240px;
+  border: 0;
+  background:
+    radial-gradient(circle at 15% 18%, rgba(255, 187, 132, 0.22) 0, rgba(255, 187, 132, 0) 28%),
+    radial-gradient(circle at 84% 12%, rgba(162, 213, 255, 0.2) 0, rgba(162, 213, 255, 0) 26%),
+    linear-gradient(150deg, #fffaf4 0%, #fef2ea 54%, #f9f8ff 100%);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 0;
+}
+
+.pet-card {
+  margin-bottom: 20px;
+  border: 0;
+  border-radius: 20px;
+  overflow: hidden;
+  background: linear-gradient(180deg, #fffefc 0%, #fff6ec 100%);
+  box-shadow: 0 12px 28px rgba(224, 158, 118, 0.2);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, filter 0.25s ease;
+  position: relative;
+}
+
+.pet-card::before {
+  content: '';
+  position: absolute;
+  top: -28px;
+  right: -24px;
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 190, 144, 0.5) 0%, rgba(255, 190, 144, 0) 72%);
+  pointer-events: none;
+}
+
+.pet-card:hover {
+  transform: translateY(-5px) scale(1.01);
+  box-shadow: 0 18px 36px rgba(224, 158, 118, 0.28);
+  filter: saturate(1.05);
+}
+
+.card-title .name {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--pet-text-main);
+}
+
+.card-title .subtitle {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--pet-text-sub);
+}
+
+.action-trigger {
+  color: #9f6d4f;
+}
+
+.pet-profile {
+  padding: 8px 0 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.pet-avatar {
+  width: 108px;
+  height: 108px;
+  border-radius: 999px;
+  padding: 8px;
+  background: conic-gradient(from 130deg, var(--pet-peach), var(--pet-mint), var(--pet-blue), var(--pet-peach));
+  box-shadow: inset 0 0 0 1px #f4d5c0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.pet-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.pet-meta :deep(.el-tag) {
+  border: 0;
+  color: #8f5536;
+  background: #fff1e4;
+}
+
+.pet-meta :deep(.el-tag.el-tag--success) {
+  color: #2f8e65;
+  background: #e8f9ef;
+}
+
+.pet-meta :deep(.el-tag.el-tag--warning) {
+  color: #b66a28;
+  background: #fff3de;
+}
+
+.pet-info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  padding: 12px 14px;
+  background: linear-gradient(160deg, #fff6ec 0%, #fff9f2 100%);
+  border-radius: 12px;
+  border: 1px solid #f5d9c2;
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.label {
+  color: #aa7e63;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.value {
+  color: #6f4733;
+  font-size: 13px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pet-actions {
+  margin-top: 14px;
+  display: flex;
+  gap: 10px;
+}
+
+.action-btn {
+  flex: 1;
+  height: 36px;
+  border-radius: 12px;
+  font-weight: 600;
+  border-color: #f0b894;
+  color: #905230;
+  background: #fff8f2;
+}
+
+.action-btn:hover {
+  border-color: #e99f71;
+  color: #7a4326;
+  background: #ffeede;
+}
+
+.action-btn.el-button--primary {
+  border: 0;
+  color: #fff;
+  background: linear-gradient(135deg, #ff9f67 0%, #ff7f88 100%);
+  box-shadow: 0 8px 18px rgba(255, 136, 126, 0.35);
+}
+
+.action-btn.el-button--primary:hover {
+  background: linear-gradient(135deg, #ff9457 0%, #ff6f7b 100%);
+}
+
+.avatar-uploader :deep(.el-upload) {
+  border: 1px dashed #d9d9d9;
+  border-radius: 8px;
+  cursor: pointer;
+  width: 96px;
+  height: 96px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.2s ease;
+}
+
+.avatar-uploader :deep(.el-upload:hover) {
+  border-color: #409eff;
+}
+
+.avatar {
+  width: 96px;
+  height: 96px;
+  object-fit: cover;
+  display: block;
+}
+
+.avatar-uploader-icon {
+  font-size: 24px;
+  color: #8c939d;
+}
+
+.empty-pet {
+  padding: 40px 0;
+}
+
+.detail-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.detail-basic h3 {
+  margin-bottom: 8px;
+}
+
+.detail-tags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.detail-stats {
+  margin-top: 20px;
+}
+
+.stat-item {
+  text-align: center;
+}
+
+.stat-number {
+  font-size: 20px;
+  font-weight: 600;
+  color: #303133;
+}
+
+.stat-label {
+  color: #909399;
+}
+
+@media (max-width: 768px) {
+  .pet-info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .pet-actions {
+    flex-direction: column;
+  }
+}
+</style>

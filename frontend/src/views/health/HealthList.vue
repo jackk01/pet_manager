@@ -410,13 +410,56 @@ const healthRules = {
   ]
 }
 
+const parseListPayload = <T>(payload: any): { items: T[]; total: number } => {
+  if (Array.isArray(payload)) {
+    return { items: payload, total: payload.length }
+  }
+  if (Array.isArray(payload?.results)) {
+    return { items: payload.results, total: payload.count ?? payload.results.length }
+  }
+  if (Array.isArray(payload?.items)) {
+    return { items: payload.items, total: payload.total ?? payload.items.length }
+  }
+  if (Array.isArray(payload?.data?.items)) {
+    return { items: payload.data.items, total: payload.data.total ?? payload.data.items.length }
+  }
+  if (Array.isArray(payload?.data)) {
+    return { items: payload.data, total: payload.data.length }
+  }
+  return { items: [], total: 0 }
+}
+
+const showFriendlyError = (error: any, fallback: string) => {
+  const status = error?.response?.status
+  const messageByStatus: Record<number, string> = {
+    401: '登录状态已过期，请重新登录后再试',
+    403: '当前账号暂无权限访问这部分数据',
+    404: '请求的服务暂时不可用，请稍后刷新重试',
+    500: '服务器开小差了，请稍后再试'
+  }
+  const backendError = error?.response?.data
+  const backendMessage = backendError
+    ? Object.entries(backendError)
+        .map(([key, value]) => `${key}: ${Array.isArray(value) ? value.join(', ') : value}`)
+        .join('; ')
+    : ''
+  const message = messageByStatus[status] || backendMessage || fallback
+  ElMessage({
+    type: 'error',
+    showClose: true,
+    duration: 3600,
+    message
+  })
+}
+
 // 获取宠物列表
 const fetchPetList = async () => {
   try {
     const res = await getPetList()
-    petList.value = res.data
-  } catch (error) {
-    ElMessage.error('获取宠物列表失败')
+    const parsed = parseListPayload<PetDto>(res as any)
+    petList.value = parsed.items
+  } catch (error: any) {
+    showFriendlyError(error, '宠物列表加载失败，请稍后重试')
   }
 }
 
@@ -437,10 +480,16 @@ const fetchHealthList = async () => {
     }
     
     const res = await getHealthRecordList(params)
-    healthList.value = res.data.items
-    pagination.total = res.data.total
-  } catch (error) {
-    ElMessage.error('获取健康记录失败')
+    const parsed = parseListPayload<any>(res as any)
+    healthList.value = parsed.items.map((item) => ({
+      ...item,
+      pet_id: item.pet_id ?? item.pet,
+      pet_name: item.pet_name ?? petList.value.find((p) => p.id === (item.pet_id ?? item.pet))?.name,
+      pet_avatar: item.pet_avatar ?? petList.value.find((p) => p.id === (item.pet_id ?? item.pet))?.avatar
+    }))
+    pagination.total = parsed.total
+  } catch (error: any) {
+    showFriendlyError(error, '健康记录加载失败，请稍后重试')
   } finally {
     loading.value = false
   }
@@ -494,17 +543,29 @@ const handleSubmitHealth = async () => {
     if (valid) {
       submitLoading.value = true
       try {
+        const payload: any = {
+          pet: (healthForm as any).pet_id,
+          record_type: (healthForm as any).record_type,
+          record_date: (healthForm as any).record_date,
+          title: (healthForm as any).title,
+          content: (healthForm as any).content || '',
+          doctor: (healthForm as any).doctor || '',
+          hospital: (healthForm as any).hospital || '',
+          cost: (healthForm as any).cost,
+          attachment: (healthForm as any).attachment || '',
+          next_check_date: (healthForm as any).next_check_date || undefined
+        }
         if (isEdit.value && currentHealth.value) {
-          await updateHealthRecord(currentHealth.value.id, healthForm as UpdateHealthRecordDto)
+          await updateHealthRecord(currentHealth.value.id, payload as UpdateHealthRecordDto)
           ElMessage.success('修改成功')
         } else {
-          await createHealthRecord(healthForm as CreateHealthRecordDto)
+          await createHealthRecord(payload as CreateHealthRecordDto)
           ElMessage.success('添加成功')
         }
         healthDialogVisible.value = false
-        fetchHealthList()
+        await fetchHealthList()
       } catch (error: any) {
-        ElMessage.error(error.response?.data?.detail || '操作失败')
+        showFriendlyError(error, '保存失败，请检查填写信息后重试')
       } finally {
         submitLoading.value = false
       }
@@ -541,9 +602,9 @@ const confirmDelete = async () => {
     await deleteHealthRecord(currentHealth.value.id)
     ElMessage.success('删除成功')
     deleteDialogVisible.value = false
-    fetchHealthList()
-  } catch (error) {
-    ElMessage.error('删除失败')
+    await fetchHealthList()
+  } catch (error: any) {
+    showFriendlyError(error, '删除失败，请稍后重试')
   } finally {
     deleteLoading.value = false
   }
@@ -560,8 +621,8 @@ const getRecordTypeTag = (type: string) => {
   return 'info'
 }
 
-onMounted(() => {
-  fetchPetList()
-  fetchHealthList()
+onMounted(async () => {
+  await fetchPetList()
+  await fetchHealthList()
 })
 </script>

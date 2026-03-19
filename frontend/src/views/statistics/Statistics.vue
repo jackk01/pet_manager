@@ -132,6 +132,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
+import { ElMessage } from 'element-plus'
 import * as echarts from 'echarts'
 import { getStatistics } from '@/api/statistics'
 import { getPetList } from '@/api/pet'
@@ -154,13 +155,46 @@ const dateRange = ref<string[]>([])
 const selectedPetId = ref<number>()
 const stats = ref<any>({})
 
+const parseListPayload = <T>(payload: any): T[] => {
+  if (Array.isArray(payload)) return payload
+  if (Array.isArray(payload?.results)) return payload.results
+  if (Array.isArray(payload?.items)) return payload.items
+  if (Array.isArray(payload?.data?.items)) return payload.data.items
+  if (Array.isArray(payload?.data)) return payload.data
+  return []
+}
+
+const showFriendlyError = (error: any, fallback: string) => {
+  const status = error?.response?.status
+  const messageByStatus: Record<number, string> = {
+    401: '登录状态已过期，请重新登录后再试',
+    403: '当前账号暂无权限访问这部分数据',
+    404: '请求的服务暂时不可用，请稍后刷新重试',
+    500: '服务器开小差了，请稍后再试'
+  }
+  const backendError = error?.response?.data
+  const backendMessage = backendError
+    ? Object.entries(backendError)
+        .map(([key, value]) => `${key}: ${Array.isArray(value) ? value.join(', ') : value}`)
+        .join('; ')
+    : ''
+  const message = messageByStatus[status] || backendMessage || fallback
+  ElMessage({
+    type: 'error',
+    showClose: true,
+    duration: 3600,
+    message
+  })
+}
+
 // 获取宠物列表
 const fetchPetList = async () => {
   try {
     const res = await getPetList()
-    petList.value = res.data
-  } catch (error) {
+    petList.value = parseListPayload<any>(res as any)
+  } catch (error: any) {
     console.error('获取宠物列表失败:', error)
+    showFriendlyError(error, '宠物列表加载失败，请稍后重试')
   }
 }
 
@@ -177,10 +211,11 @@ const fetchStatistics = async () => {
     }
     
     const res = await getStatistics(params)
-    stats.value = res.data
+    stats.value = (res || {}) as any
     initCharts()
-  } catch (error) {
+  } catch (error: any) {
     console.error('获取统计数据失败:', error)
+    showFriendlyError(error, '统计数据加载失败，请稍后重试')
   }
 }
 

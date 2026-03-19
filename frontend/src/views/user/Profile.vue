@@ -239,14 +239,6 @@
               </el-select>
             </el-form-item>
             
-            <el-form-item label="主题设置">
-              <el-radio-group v-model="settings.theme">
-                <el-radio label="light">浅色</el-radio>
-                <el-radio label="dark">深色</el-radio>
-                <el-radio label="auto">跟随系统</el-radio>
-              </el-radio-group>
-            </el-form-item>
-            
             <el-form-item>
               <el-button type="primary" :loading="settingsLoading" @click="handleSaveSettings">
                 保存设置
@@ -293,7 +285,7 @@ const profileForm = reactive<UpdateUserProfileDto>({
   full_name: '',
   phone: '',
   birth_date: '',
-  gender: '',
+  gender: 'unknown',
   address: ''
 })
 
@@ -307,8 +299,7 @@ const settings = reactive({
   email_notification: true,
   sms_notification: false,
   remind_days: 7,
-  language: 'zh-CN',
-  theme: 'light'
+  language: 'zh-CN'
 })
 
 const profileRules = {
@@ -363,7 +354,7 @@ const fetchUserInfo = () => {
 const fetchUserStats = async () => {
   try {
     const res = await getUserStats()
-    userStats.value = res.data
+    userStats.value = (res || userStats.value) as any
   } catch (error) {
     console.error('获取用户统计数据失败:', error)
   }
@@ -420,7 +411,8 @@ const handleChangePassword = async () => {
 
 // 头像上传
 const handleAvatarUpload = (event: Event) => {
-  const file = (event.target as HTMLInputElement).files?.[0]
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
   if (!file) return
   
   if (file.type.indexOf('image/') === -1) {
@@ -428,23 +420,39 @@ const handleAvatarUpload = (event: Event) => {
     return
   }
   
-  const isLt2M = file.size / 1024 / 1024 < 2
-  if (!isLt2M) {
-    ElMessage.error('图片大小不能超过 2MB')
+  const isLt10M = file.size / 1024 / 1024 < 10
+  if (!isLt10M) {
+    ElMessage.error('图片大小不能超过 10MB')
     return
   }
   
-  // 这里模拟头像上传，实际项目中需要上传到服务器
   const reader = new FileReader()
   reader.onload = async (e) => {
     try {
-      // 这里应该调用上传头像的API
-      // await uploadAvatar({ avatar: e.target?.result as string })
-      userInfo.value.avatar = e.target?.result as string
+      const avatarBase64 = e.target?.result as string
+      await updateUserProfile({ avatar: avatarBase64 } as UpdateUserProfileDto)
+      await userStore.getUserInfo()
+      fetchUserInfo()
       ElMessage.success('头像上传成功')
-    } catch (error) {
-      ElMessage.error('头像上传失败')
+    } catch (error: any) {
+      const errorData = error.response?.data
+      const errorMessage = errorData
+        ? Object.entries(errorData)
+            .map(([key, value]) => `${key}: ${Array.isArray(value) ? value.join(', ') : value}`)
+            .join('; ')
+        : '头像上传失败'
+      ElMessage.error(errorMessage || '头像上传失败')
+    } finally {
+      input.value = ''
     }
+  }
+  reader.onerror = () => {
+    input.value = ''
+    ElMessage.error('头像上传失败')
+  }
+  reader.onabort = () => {
+    input.value = ''
+    ElMessage.error('头像上传已取消')
   }
   reader.readAsDataURL(file)
 }
