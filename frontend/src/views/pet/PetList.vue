@@ -307,7 +307,8 @@ const petRules = {
 const fetchPetList = async () => {
   try {
     const res = await getPetList()
-    petList.value = res as unknown as PetDto[]
+    // 处理后端分页返回格式 {count, next, previous, results}
+    petList.value = (res.results || res) as unknown as PetDto[]
   } catch (error) {
     ElMessage.error('获取宠物列表失败')
   }
