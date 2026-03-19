@@ -123,7 +123,7 @@
             <el-timeline-item
               v-for="record in recentHealthRecords"
               :key="record.id"
-              :timestamp="formatDate(record.visit_date)"
+              :timestamp="formatDate(record.record_date)"
               placement="bottom"
             >
               <div class="health-item">
@@ -131,7 +131,7 @@
                   <span class="pet-name">{{ record.pet_name }}</span>
                   <span class="record-type">{{ record.record_type }}</span>
                 </div>
-                <div class="health-desc">{{ record.description }}</div>
+                <div class="health-desc">{{ record.title }}</div>
               </div>
             </el-timeline-item>
           </el-timeline>

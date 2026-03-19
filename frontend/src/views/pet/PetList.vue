@@ -39,13 +39,13 @@
                 <span class="value">{{ pet.breed || '未知' }}</span>
               </div>
               <div class="info-row">
-                <span class="label">品种：</span>
-                <span class="value">{{ pet.breed || '未知' }}</span>
+                <span class="label">毛色：</span>
+                <span class="value">{{ pet.color || '未知' }}</span>
               </div>
               <div class="info-row">
                 <span class="label">性别：</span>
                 <span class="value">
-                  {{ pet.gender === 'male' ? '公' : pet.gender === 'female' ? '母' : '未知' }}
+                  {{ pet.gender === '公' ? '公' : pet.gender === '母' ? '母' : '未知' }}
                 </span>
               </div>
               <div class="info-row">
