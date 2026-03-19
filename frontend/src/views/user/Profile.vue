@@ -477,3 +477,79 @@ onMounted(() => {
 
 <style scoped>
 .profile-container {
+  padding: 20px;
+}
+
+.page-header h2 {
+  margin: 0;
+  font-size: 24px;
+  color: #303133;
+}
+
+.avatar-card {
+  text-align: center;
+}
+
+.avatar-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.avatar-wrapper {
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.upload-btn {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.user-basic {
+  text-align: center;
+}
+
+.user-basic h3 {
+  margin: 10px 0 5px;
+  font-size: 20px;
+}
+
+.user-email {
+  color: #909399;
+  margin-bottom: 10px;
+}
+
+.stats-list {
+  padding: 0 10px;
+}
+
+.stats-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+}
+
+.stats-label {
+  color: #606266;
+}
+
+.stats-value {
+  font-weight: bold;
+  color: #303133;
+}
+
+.info-card :deep(.el-card__header) {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.setting-desc {
+  margin-left: 10px;
+  color: #909399;
+  font-size: 12px;
+}
+</style>

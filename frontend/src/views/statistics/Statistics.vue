@@ -550,4 +550,70 @@ onUnmounted(() => {
 
 .overview-content {
   display: flex;
-  justify-content
+  justify-content: space-between;
+  align-items: center;
+}
+
+.overview-info {
+  flex: 1;
+}
+
+.overview-label {
+  font-size: 14px;
+  color: #909399;
+  margin: 0 0 8px 0;
+}
+
+.overview-value {
+  font-size: 24px;
+  font-weight: bold;
+  color: #303133;
+  margin: 0;
+}
+
+.overview-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.expense-icon {
+  background: rgba(64, 158, 255, 0.1);
+  color: #409eff;
+}
+
+.avg-icon {
+  background: rgba(103, 194, 58, 0.1);
+  color: #67c23a;
+}
+
+.vaccine-icon {
+  background: rgba(230, 162, 60, 0.1);
+  color: #e6a23c;
+}
+
+.health-icon {
+  background: rgba(245, 108, 108, 0.1);
+  color: #f56c6c;
+}
+
+.charts-row {
+  margin-bottom: 20px;
+}
+
+.chart-card {
+  border-radius: 8px;
+}
+
+.chart-container {
+  height: 350px;
+  width: 100%;
+}
+
+.bar-chart {
+  height: 400px;
+}
+</style>
